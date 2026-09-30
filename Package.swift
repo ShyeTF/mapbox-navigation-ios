@@ -3,8 +3,16 @@
 
 import PackageDescription
 
+// ShyeTF fork: dependency URLs point to github.com/ShyeTF mirrors (tags *-shyetf.N) so the whole
+// SPM graph resolves from ShyeTF repositories (Xcode Cloud). Test-only / CLI products and their
+// dependencies (OHHTTPStubs, swift-snapshot-testing -> swift-syntax/pointfree, swift-argument-parser)
+// are removed: _MapboxNavigationTestKit, mapbox-directions-swift CLI, MapboxDirectionsTests,
+// MapboxNavigationPackageTests. Library products/modules are unchanged.
+
 let (navNativeVersion, navNativeChecksum, navNativeRevision) = ("324.15.2", "548c96ac1d0ed8296ee3d2e8e1060407119897e16e92251474e28fcfb751cf02", "baf0b6c230cc78405dddf0b95975be73fabc04b5")
-let mapsVersion: Version = "11.15.2"
+let mapsVersion: Version = "11.15.2-shyetf.1"
+let navNativeShyeTFVersion: Version = "324.15.2-shyetf.1"
+let turfVersion: Version = "4.0.0-shyetf.1"
 
 let package = Package(
     name: "MapboxNavigation",
@@ -28,21 +36,11 @@ let package = Package(
             name: "_MapboxNavigationLocalization",
             targets: ["_MapboxNavigationLocalization"]
         ),
-        .library(
-            name: "_MapboxNavigationTestKit",
-            targets: ["_MapboxNavigationTestKit"]
-        ),
-        .executable(
-            name: "mapbox-directions-swift",
-            targets: ["MapboxDirectionsCLI"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/mapbox/mapbox-navigation-native-ios.git", exact: Version(stringLiteral: navNativeVersion)),
-        .package(url: "https://github.com/mapbox/mapbox-maps-ios.git", exact: mapsVersion),
-        .package(url: "https://github.com/mapbox/turf-swift.git", exact: "4.0.0"),
-        .package(url: "https://github.com/AliSoftware/OHHTTPStubs", from: "9.1.0"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.18.1"),
-        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0"),
+        .package(url: "https://github.com/ShyeTF/mapbox-navigation-native-ios.git", exact: navNativeShyeTFVersion),
+        .package(url: "https://github.com/ShyeTF/mapbox-maps-ios.git", exact: mapsVersion),
+        .package(url: "https://github.com/ShyeTF/turf-swift.git", exact: turfVersion),
     ],
     targets: [
         .target(
@@ -100,14 +98,6 @@ let package = Package(
                 "MapboxNavigationCore"
             ]
         ),
-        .testTarget(
-            name: "MapboxDirectionsTests",
-            dependencies: [
-                "MapboxDirections",
-                .product(name:  "OHHTTPStubsSwift", package: "OHHTTPStubs"),
-            ],
-            resources: [.process("Fixtures")]
-        ),
         .target(
             name: "TestHelper",
             dependencies: [
@@ -126,33 +116,5 @@ let package = Package(
                 "CarPlayTestHelper.h",
             ]
         ),
-        .testTarget(
-            name: "MapboxNavigationPackageTests",
-            dependencies: [
-                "MapboxNavigationUIKit",
-                "TestHelper",
-                "CarPlayTestHelper",
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
-                .product(name:  "OHHTTPStubsSwift", package: "OHHTTPStubs"),
-            ],
-            exclude: [
-                "Info.plist",
-                "__Snapshots__", // Ignore snapshots folder
-            ]
-        ),
-        .target(
-            name: "_MapboxNavigationTestKit",
-            dependencies: [
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
-                "_MapboxNavigationTestHelpers",
-            ],
-            path: "Sources/.empty/_MapboxNavigationTestKit"
-        ),
-        .executableTarget(
-            name: "MapboxDirectionsCLI",
-            dependencies: [
-                "MapboxDirections",
-                .product(name: "ArgumentParser", package: "swift-argument-parser")
-            ]),
     ]
 )
